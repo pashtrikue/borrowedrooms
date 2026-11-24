@@ -1,0 +1,82 @@
+---
+import { site } from '../site.config';
+interface Props { title?: string; description?: string }
+const { title, description = site.tagline } = Astro.props;
+const fullTitle = title ? `${title} — ${site.name}` : site.name;
+const path = Astro.url.pathname;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="/" class="brand">{site.name}</a>
+      <nav>
+        <a href="/" aria-current={path === '/' ? 'page' : undefined}>Hotels</a>
+        <a href="/about/" aria-current={path.startsWith('/about') ? 'page' : undefined}>About</a>
+      </nav>
+    </header>
+    <main><slot /></main>
+    <footer class="site-footer">
+      <span>© {new Date().getFullYear()} {site.photographer}</span>
+      <a href={`mailto:${site.email}`}>{site.email}</a>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --bg: #0f0e0d;
+    --surface: #1a1816;
+    --text: #ece7e1;
+    --muted: #9a928a;
+    --line: #2b2825;
+    --accent: #c9a27e;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --sans: 'Inter', system-ui, sans-serif;
+    --gutter: clamp(16px, 4vw, 48px);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--sans); font-size: 15px; line-height: 1.6;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  main { flex: 1; }
+  a { color: inherit; }
+  img { display: block; max-width: 100%; height: auto; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.1; margin: 0; }
+  .eyebrow { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .site-header {
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    padding: 24px var(--gutter);
+  }
+  .brand { font-family: var(--serif); font-size: 26px; text-decoration: none; letter-spacing: .01em; }
+  .site-header nav { display: flex; gap: 24px; }
+  .site-header nav a {
+    font-size: 12px; letter-spacing: .16em; text-transform: uppercase;
+    text-decoration: none; color: var(--muted); transition: color .2s;
+  }
+  .site-header nav a:hover, .site-header nav a[aria-current='page'] { color: var(--text); }
+  .site-footer {
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    padding: 32px var(--gutter); margin-top: 80px; border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--muted);
+  }
+  .site-footer a { text-decoration: none; }
+  .site-footer a:hover { color: var(--text); }
+</style>
