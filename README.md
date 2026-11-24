@@ -37,7 +37,7 @@ npm run dev        # http://localhost:4321
 
 You can upload full-size photos. The build resizes and compresses them automatically.
 
-The three hotels in the repo use **placeholder images**. Delete those folders once you've added your own.
+The hotels in the repo currently use **placeholder images**. Delete those folders once you've added your own.
 
 ## Deploy
 

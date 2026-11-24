@@ -13,7 +13,7 @@ const hotels = (await getCollection('hotels', ({ data }) => !data.draft))
     <h1>{site.tagline}</h1>
   </section>
 
-  <ul class="hotels">
+  <ul class:list={["hotels", { few: hotels.length <= 2 }]}>
     {hotels.map((h, i) => (
       <li>
         <a href={`/hotels/${h.id}/`} class="card">
@@ -44,6 +44,9 @@ const hotels = (await getCollection('hotels', ({ data }) => !data.draft))
     display: grid; gap: 48px 28px;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   }
+  /* With only one or two hotels, let the cards fill the width in a wider frame. */
+  .hotels.few { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+  .hotels.few .frame { aspect-ratio: 4 / 3; }
   .card { display: block; text-decoration: none; }
   .frame { aspect-ratio: 4 / 5; overflow: hidden; background: var(--surface); }
   .frame img {
