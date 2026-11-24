@@ -54,7 +54,9 @@ The hotels in the repo currently use **placeholder images**. Delete those folder
 
 ## Deploy
 
-The site is hosted on **Netlify** and rebuilds automatically every time `main` changes, including uploads made on GitHub.
-It usually goes live 1–2 minutes after a change. Build settings are in `netlify.toml`.
+Live at **https://borrowedrooms.vercel.app**
 
-If the Netlify address changes (or you add your own domain), update `site:` in `astro.config.mjs`.
+The site is hosted on **Vercel** and rebuilds automatically every time `main` changes, including uploads made on GitHub.
+It usually goes live 1–2 minutes after a change.
+
+If you add your own domain, update `site:` in `astro.config.mjs`.

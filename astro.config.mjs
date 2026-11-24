@@ -3,5 +3,5 @@ import { defineConfig } from 'astro/config';
 
 export default defineConfig({
   // Set this to your real domain once deployed (used for canonical URLs / sitemap).
-  site: 'https://borrowedrooms.netlify.app',
+  site: 'https://borrowedrooms.vercel.app',
 });
