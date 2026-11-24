@@ -35,6 +35,19 @@ npm run dev        # http://localhost:4321
    A short description of the hotel or the shoot.
    ```
 
+### Videos
+
+Short clips work well. They play silently on a loop in the gallery and open with controls in the full-screen viewer.
+
+- Videos must be **`.mp4` (H.264)**. iPhone `.MOV` files usually use HEVC, which Chrome and Firefox can't play, so convert them first:
+
+  ```bash
+  ffmpeg -i IMG_1234.MOV -an -c:v libx264 -crf 23 -pix_fmt yuv420p -movflags +faststart 05.mp4
+  ffmpeg -i 05.mp4 -frames:v 1 05.poster.jpg
+  ```
+
+- Name the video by its position, e.g. `05.mp4`, alongside an optional still frame `05.poster.jpg`. The still shows while the video loads.
+
 You can upload full-size photos. The build resizes and compresses them automatically.
 
 The hotels in the repo currently use **placeholder images**. Delete those folders once you've added your own.

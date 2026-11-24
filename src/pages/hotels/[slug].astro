@@ -3,7 +3,7 @@ import { getCollection, render } from 'astro:content';
 import { Image, getImage } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import Lightbox from '../../components/Lightbox.astro';
-import { photosFor } from '../../lib/photos';
+import { mediaFor, mediaSummary } from '../../lib/photos';
 
 export async function getStaticPaths() {
   const hotels = (await getCollection('hotels', ({ data }) => !data.draft))
@@ -16,10 +16,16 @@ export async function getStaticPaths() {
 
 const { hotel, next } = Astro.props;
 const { Content } = await render(hotel);
-const photos = await Promise.all(
-  photosFor(hotel.id).map(async ({ image }, i) => {
-    const full = await getImage({ src: image, width: Math.min(image.width, 2400), format: 'webp' });
-    return { image, full: full.src, alt: `${hotel.data.name} — photo ${i + 1}` };
+const media = mediaFor(hotel.id);
+const items = await Promise.all(
+  media.map(async (m, i) => {
+    const alt = `${hotel.data.name} — ${m.kind === 'video' ? 'video' : 'photo'} ${i + 1}`;
+    if (m.kind === 'image') {
+      const full = await getImage({ src: m.image, width: Math.min(m.image.width, 2400), format: 'webp' });
+      return { ...m, alt, full: full.src };
+    }
+    const poster = m.poster ? (await getImage({ src: m.poster, width: 1200, format: 'webp' })).src : undefined;
+    return { ...m, alt, full: m.src, posterUrl: poster };
   }),
 );
 ---
@@ -29,23 +35,39 @@ const photos = await Promise.all(
       <a href="/" class="back eyebrow">← All hotels</a>
       <h1>{hotel.data.name}</h1>
       <p class="eyebrow">
-        {hotel.data.location}{hotel.data.year && <> · {hotel.data.year}</>} · {photos.length} photos
+        {hotel.data.location}{hotel.data.year && <> · {hotel.data.year}</>} · {mediaSummary(media)}
       </p>
       <div class="desc"><Content /></div>
     </header>
 
     <div class="gallery">
-      {photos.map((p, i) => (
-        <a href={p.full} class="photo" data-index={i} data-full={p.full}>
-          <Image
-            src={p.image}
-            alt={p.alt}
-            widths={[480, 800, 1200]}
-            sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
-            loading={i < 4 ? 'eager' : 'lazy'}
-          />
-        </a>
-      ))}
+      {items.map((item, i) =>
+        item.kind === 'image' ? (
+          <a href={item.full} class="photo" data-index={i} data-ratio={item.image.height / item.image.width} data-full={item.full} data-kind="image">
+            <Image
+              src={item.image}
+              alt={item.alt}
+              widths={[480, 800, 1200]}
+              sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
+              loading={i < 4 ? 'eager' : 'lazy'}
+            />
+          </a>
+        ) : (
+          <a href={item.full} class="photo" data-index={i} data-ratio={item.poster ? item.poster.height / item.poster.width : 16 / 9} data-full={item.full} data-kind="video" data-poster={item.posterUrl} aria-label={item.alt}>
+            <video
+              src={item.src}
+              poster={item.posterUrl}
+              width={item.poster?.width}
+              height={item.poster?.height}
+              muted
+              loop
+              playsinline
+              preload="none"
+              aria-hidden="true"
+            ></video>
+          </a>
+        ),
+      )}
     </div>
 
     {next.id !== hotel.id && (
@@ -59,6 +81,53 @@ const photos = await Promise.all(
   <Lightbox />
 </Base>
 
+<script>
+  // Masonry: place each item, in order, into the currently shortest column.
+  // Keeps photos reading left-to-right and the columns balanced.
+  // Without JavaScript the gallery falls back to plain CSS columns.
+  const gallery = document.querySelector<HTMLElement>('.gallery')!;
+  const tiles = [...gallery.querySelectorAll<HTMLElement>('.photo')];
+  let currentCols = 0;
+  function layout() {
+    const w = gallery.clientWidth;
+    const cols = w >= 1000 ? 3 : w >= 600 ? 2 : 1;
+    if (cols === currentCols) return;
+    currentCols = cols;
+    const columns = Array.from({ length: cols }, () => {
+      const c = document.createElement('div');
+      c.className = 'col';
+      return c;
+    });
+    const heights = new Array(cols).fill(0);
+    for (const t of tiles) {
+      const i = heights.indexOf(Math.min(...heights));
+      columns[i].append(t);
+      heights[i] += Number(t.dataset.ratio) || 1;
+    }
+    gallery.replaceChildren(...columns);
+    gallery.classList.add('js-masonry');
+  }
+  layout();
+  addEventListener('resize', layout);
+
+  // Gallery videos play silently while on screen (unless the viewer prefers reduced motion).
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const vids = document.querySelectorAll<HTMLVideoElement>('.gallery video');
+  if (!reduce) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const v = e.target as HTMLVideoElement;
+          if (e.isIntersecting) { v.preload = 'auto'; v.play().catch(() => {}); }
+          else v.pause();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    vids.forEach((v) => io.observe(v));
+  }
+</script>
+
 <style>
   .hotel-head { padding: 32px var(--gutter) 56px; max-width: 760px; }
   .back { text-decoration: none; display: inline-block; margin-bottom: 28px; }
@@ -66,12 +135,14 @@ const photos = await Promise.all(
   h1 { font-size: clamp(44px, 7vw, 88px); margin-bottom: 14px; }
   .desc { font-size: 17px; color: #cfc8c0; margin-top: 24px; }
   .gallery { columns: 3 320px; column-gap: 16px; padding: 0 var(--gutter); }
+  .gallery.js-masonry { columns: auto; display: flex; gap: 16px; align-items: flex-start; }
+  .gallery.js-masonry :global(.col) { flex: 1; min-width: 0; }
   .photo {
     display: block; margin-bottom: 16px; break-inside: avoid;
     background: var(--surface); cursor: zoom-in; overflow: hidden;
   }
-  .photo img { width: 100%; transition: opacity .3s, transform .8s cubic-bezier(.2,.7,.2,1); }
-  .photo:hover img { opacity: .88; }
+  .photo img, .photo video { display: block; width: 100%; height: auto; transition: opacity .3s; }
+  .photo:hover img, .photo:hover video { opacity: .88; }
   .next {
     display: flex; flex-direction: column; gap: 8px; text-decoration: none;
     margin: 80px var(--gutter) 0; padding-top: 32px; border-top: 1px solid var(--line);

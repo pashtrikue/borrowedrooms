@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import { site } from '../site.config';
-import { photosFor } from '../lib/photos';
+import { mediaFor, mediaSummary } from '../lib/photos';
 
 const hotels = (await getCollection('hotels', ({ data }) => !data.draft))
   .sort((a, b) => a.data.order - b.data.order || a.data.name.localeCompare(b.data.name));
@@ -28,7 +28,7 @@ const hotels = (await getCollection('hotels', ({ data }) => !data.draft))
           </div>
           <div class="meta">
             <h2>{h.data.name}</h2>
-            <p class="eyebrow">{h.data.location} · {photosFor(h.id).length} photos</p>
+            <p class="eyebrow">{h.data.location} · {mediaSummary(mediaFor(h.id))}</p>
           </div>
         </a>
       </li>
