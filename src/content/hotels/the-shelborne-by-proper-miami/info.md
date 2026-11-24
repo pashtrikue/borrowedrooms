@@ -1,7 +1,7 @@
 ---
 name: The Shelborne by Proper
 location: Miami Beach, Florida
-cover: ./05.jpg
+cover: ./04.jpg
 year: 2025
 order: 1
 ---
