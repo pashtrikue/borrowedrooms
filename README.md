@@ -54,7 +54,7 @@ The hotels in the repo currently use **placeholder images**. Delete those folder
 
 ## Deploy
 
-Run `npm run build` to produce a static site in `dist/`. To host it for free:
+The site is hosted on **Netlify** and rebuilds automatically every time `main` changes, including uploads made on GitHub.
+It usually goes live 1–2 minutes after a change. Build settings are in `netlify.toml`.
 
-- **Netlify** or **Vercel:** import this GitHub repo. They detect Astro automatically.
-- Then set your real domain in `astro.config.mjs` (`site:`).
+If the Netlify address changes (or you add your own domain), update `site:` in `astro.config.mjs`.
